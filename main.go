@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"personweb/models"
@@ -79,6 +80,7 @@ func addPerson(c *gin.Context) {
 }
 
 func updatePerson(c *gin.Context) {
+
 	var json models.Person
 
 	if err := c.ShouldBindJSON(&json); err != nil {
@@ -87,6 +89,8 @@ func updatePerson(c *gin.Context) {
 	}
 
 	personId, err := strconv.Atoi(c.Param("id"))
+
+	fmt.Printf("Updating id %d", personId)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
@@ -102,10 +106,28 @@ func updatePerson(c *gin.Context) {
 }
 
 func deletePerson(c *gin.Context) {
-	id := c.Param("id")
-	c.JSON(http.StatusOK, gin.H{"message": "deletePerson " + id + " Called"})
+	personId, err := strconv.Atoi(c.Param("id"))
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+	}
+
+	success, err := models.DeletePerson(personId)
+
+	if success {
+		c.JSON(http.StatusOK, gin.H{"message": "Success"})
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err})
+	}
 }
 
 func options(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "options Called"})
+	ourOptions := "HTTP/1.1 200 OK\n" +
+		"Allow: GET,POST,PUT,DELETE,OPTIONS\n" +
+		"Access-Control-Allow-Origin: http://locahost:8080\n" +
+		"Access-Control-Allow-Methods: GET,POST,PUT,DELETE,OPTIONS\n" +
+		"Access-Control-Allow-Headers: Content-Type\n"
+
+	c.String(200, ourOptions)
 }
