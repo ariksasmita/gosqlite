@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"personweb/models"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -78,7 +79,26 @@ func addPerson(c *gin.Context) {
 }
 
 func updatePerson(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"message": "updatePerson Called"})
+	var json models.Person
+
+	if err := c.ShouldBindJSON(&json); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	personId, err := strconv.Atoi(c.Param("id"))
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+	}
+
+	success, err := models.UpdatePerson(json, personId)
+
+	if success {
+		c.JSON(http.StatusOK, gin.H{"message": "Success"})
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err})
+	}
 }
 
 func deletePerson(c *gin.Context) {
